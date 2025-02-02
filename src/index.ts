@@ -11,13 +11,22 @@ export class LockNotAcquiredError extends Error {
 export interface CommonAcquireLock {
     bucket: string,
     key: string,
+    // the default implementation is to write { locked: true } at defaultGenerateBody
     generateBody?: () => Promise<string>
 }
 
+/**
+ * Attempt to acquire a lock via overwriting an object in bucket and name of key.
+ * 
+ * First the object with that key name will be pulled and its etag stored.
+ * The contents of the object will be compared using the conditional. 
+ * If true the object will be overwritten with an If-Match on the etag.
+ * This process will repeat maxAttempt times with a timeout delay between each
+ * attempt.
+ */
 export interface AcquireCompareAndSwapLock extends CommonAcquireLock {
-    // filename: String
+    // a default condition of checking { locked: false } can be found at defaultConditional
     conditional: (props: GetObjectCommandOutput) => Promise<boolean>
-    // body?: () => string
     maxAttempts?: number
     timeout?: number
 };
@@ -26,9 +35,13 @@ export interface LockedCompareAndSwapLock {
     release: (newBody: string) => Promise<boolean>
 }
 
+/**
+ * Attempt to acquire a lock via writing an object in bucket and name of key.
+ * 
+ * The If-None-Match is utilized to verified two clients do not both have their
+ * writes succeed
+ */
 export interface AcquireExistenceLock extends CommonAcquireLock {
-    // filename: String,
-    // body?: () => string
 };
 
 export interface LockedExistenceLock {
@@ -74,6 +87,10 @@ export class S3Lock {
         }
     }
 
+    /**
+     * Attempts to acquire a lock either via a compare-and-swap methodology or an existence check.
+     * Throws LockNotAcquiredError if the lock could not be acquired.
+     */
     public async acquireLock(props: AcquireCompareAndSwapLock): Promise<LockedCompareAndSwapLock>;
     public async acquireLock(props: AcquireExistenceLock): Promise<LockedExistenceLock>;
     public async acquireLock(props: AcquireCompareAndSwapLock | AcquireExistenceLock): Promise<any> {

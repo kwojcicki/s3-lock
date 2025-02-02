@@ -11,10 +11,6 @@
     "scripts": {
         "build": "tsc",
         "prepare": "npm run build",
-        "prepublishOnly": "npm test && npm run lint",
-        "version": "git add -A src",
-        "postversion": "git push && git push --tags",
-        "test": "echo \"Error: no test specified\" && exit 1",
         "zip": "node -e \"if(require('fs').existsSync('dist')){const archiver=require('archiver');const output=require('fs').createWriteStream('deployment.zip');const archive=archiver('zip');output.on('close',()=>console.log('Created dist.zip'));archive.pipe(output);archive.directory('dist/',false);archive.directory('node_modules/','node_modules');archive.finalize()}else{console.error('dist directory does not exist');process.exit(1)}\"",
         "build-test": "tsc && npm run zip"
     },

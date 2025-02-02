@@ -1,5 +1,35 @@
 # S3-Lock
 
+A library for acquiring and releasing distributed locks via S3.
+
+# Why?
+
+- Assuming no lock contention, acquiring and then releasing a lock "only" costs $0.0009 USD 💸🤑💰
+- Fast, releasing and acquiring locks "only" takes 10s of milliseconds 🏃💨💨
+- Using strange/non idiomatic patterns for locking is a good idea 🔒🔓🔑
+
+# Examples
+
+```javascript
+const locker = new S3Lock(new S3Client({
+    region: 'us-east-1'
+}));
+
+const lock = await locker.acquireLock({
+    bucket,
+    key,
+    generateBody: async () => JSON.stringify({
+        locked: true
+    })
+});
+
+// do work
+
+await lock.release(JSON.stringify({ locked: false }));
+```
+
+# Technical details
+
 As of [2024/08/20, S3 supports distributed locking through conditional writes](https://aws.amazon.com/about-aws/whats-new/2024/08/amazon-s3-conditional-writes/).
 
 Conditional writes are done via [conditional requests](https://docs.aws.amazon.com/AmazonS3/latest/userguide/conditional-requests.html). 
@@ -21,25 +51,3 @@ The `If-None-match` supports acquiring locks by writing a lock's status to a new
 Clients can acquire a lock via writing anything to a new file. To ensure no clobbers happen the write will only succeed if no file exists with such a name.  
 
 Lock expiration can be achieved via fencing tokens either via monotonically increasing values within the lock files, alternatively the time stamps of the files could be utilized.
-
-# Why?
-
-- Assuming no lock contention, acquiring and then releasing a lock "only" costs $0.0009 USD 💸🤑💰
-- Fast, releasing and acquiring locks "only" takes 10s of milliseconds 🏃💨💨
-- Using strange/non idiomatic patterns for locking is a good idea 🔒🔓🔑
-
-# Examples
-
-```javascript
-const lock = await locker.acquireLock({
-    bucket,
-    key,
-    generateBody: async () => JSON.stringify({
-        locked: true
-    })
-});
-
-// do work
-
-await lock.release(JSON.stringify({ locked: false }));
-```
