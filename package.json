@@ -1,0 +1,31 @@
+{
+    "name": "s3-lock",
+    "version": "1.0.0",
+    "description": "",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "type": "commonjs",
+    "scripts": {
+        "build": "tsc",
+        "prepare": "npm run build",
+        "prepublishOnly": "npm test && npm run lint",
+        "version": "git add -A src",
+        "postversion": "git push && git push --tags",
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "zip": "node -e \"if(require('fs').existsSync('dist')){const archiver=require('archiver');const output=require('fs').createWriteStream('deployment.zip');const archive=archiver('zip');output.on('close',()=>console.log('Created dist.zip'));archive.pipe(output);archive.directory('dist/',false);archive.directory('node_modules/','node_modules');archive.finalize()}else{console.error('dist directory does not exist');process.exit(1)}\"",
+        "build-test": "tsc && npm run zip"
+    },
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/node": "^20.14.9",
+        "archiver": "^7.0.1",
+        "typescript": "^5.7.3"
+    },
+    "dependencies": {
+        "@aws-sdk/client-s3": "^3.614.0"
+    }
+}
